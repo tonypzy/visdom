@@ -34,6 +34,7 @@ import {
 import ConnectionIndicator from './topbar/ConnectionIndicator';
 import EnvControls from './topbar/EnvControls';
 import FilterControls from './topbar/FilterControls';
+import TagFilterControls from './topbar/TagFilterControls';
 import ViewControls from './topbar/ViewControls';
 import WidthProvider from './Width';
 
@@ -106,6 +107,9 @@ const App = () => {
   });
   const [filterString, setFilterString] = useState(
     localStorage.getItem('filter') || ''
+  );
+  const [tagFilter, setTagFilter] = useState(
+    JSON.parse(localStorage.getItem('tagFilter') || '[]')
   );
 
   // non-triggering state variables
@@ -814,10 +818,18 @@ const App = () => {
     />,
   ];
 
+  // Filter env list by selected tags (OR mode: env has any of the selected tags)
+  const filteredEnvList = tagFilter.length === 0
+    ? storeMeta.envList
+    : storeMeta.envList.filter((env) => {
+        const envTags = (storeMeta.tags[env]) || [];
+        return tagFilter.some((tag) => envTags.includes(tag));
+      });
+
   let envControls = (
     <EnvControls
       envIDs={selection.envIDs}
-      envList={storeMeta.envList}
+      envList={filteredEnvList}
       tags={storeMeta.tags}
       envSelectorStyle={{
         width: Math.max(window.innerWidth / 3, 50),
@@ -825,6 +837,20 @@ const App = () => {
       onEnvClear={closeAllPanes}
       onEnvManageButton={() => setShowEnvModal(!showEnvModal)}
       onEnvSelect={onEnvSelect}
+    />
+  );
+  let tagFilterControls = (
+    <TagFilterControls
+      tags={storeMeta.tags}
+      selectedTags={tagFilter}
+      onTagFilterChange={(next) => {
+        setTagFilter(next);
+        localStorage.setItem('tagFilter', JSON.stringify(next));
+      }}
+      onTagFilterClear={() => {
+        setTagFilter([]);
+        localStorage.setItem('tagFilter', '[]');
+      }}
     />
   );
   let viewControls = (
@@ -884,6 +910,8 @@ const App = () => {
         <span className="vertical-line" />
         &nbsp;&nbsp;
         {envControls}
+        &nbsp;&nbsp;
+        {tagFilterControls}
         &nbsp;&nbsp;
         <span className="vertical-line" />
         &nbsp;&nbsp;

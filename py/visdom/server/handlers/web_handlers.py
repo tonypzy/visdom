@@ -706,8 +706,19 @@ class TagsHandler(BaseHandler):
 
     @check_auth
     def get(self):
-        """Handle GET requests for retrieving tags."""
-        eid = self.get_argument("eid", "main")
+        """Handle GET requests for retrieving tags.
+
+        If no ``eid`` query parameter is provided, returns the full
+        tags index ``{eid: [tag, ...], ...}`` so that clients can
+        retrieve all tags in a single request.
+        """
+        eid = self.get_argument("eid", None)
+
+        if eid is None:
+            # Return full tags index
+            self.write(json.dumps(self.app.tags))
+            return
+
         eid = escape_eid(eid)
 
         # Prefer app.tags (global authoritative source) over per-env state

@@ -857,6 +857,48 @@ class Visdom(object):
         except Exception:
             return []
 
+    def get_all_tags(self):
+        """
+        Return the full tags index ``{env: [tag, ...], ...}`` in a
+        single request.
+        """
+        try:
+            url = "{0}:{1}{2}/tags".format(
+                self.server, self.port, self.base_url
+            )
+            r = self.session.get(url)
+            return r.json()
+        except Exception:
+            return {}
+
+    def filter_envs_by_tags(self, tags, mode="or"):
+        """
+        Return a list of environment names whose tags match *tags*.
+
+        Args:
+            tags: str or list of tag strings to filter by.
+            mode: ``'or'`` – env has ANY of the tags (union).
+                  ``'and'`` – env has ALL of the tags (intersection).
+
+        Returns:
+            list of environment name strings.
+        """
+        if isinstance(tags, str):
+            tags = [tags]
+        tags_set = set(tags)
+
+        all_tags = self.get_all_tags()
+        result = []
+        for env, env_tags in all_tags.items():
+            env_tags_set = set(env_tags)
+            if mode == "and":
+                if tags_set.issubset(env_tags_set):
+                    result.append(env)
+            else:  # 'or'
+                if tags_set & env_tags_set:
+                    result.append(env)
+        return result
+
     def set_window_data(self, data, win=None, env=None):
         """
         This function sets all the window data for a specified window in
