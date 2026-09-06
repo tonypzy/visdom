@@ -270,7 +270,14 @@ function EnvModal(props) {
             if (selectedEnvsSet.has(activeEnv)) {
               sortedEnvs.push(activeEnv);
             }
-            onEnvDelete(sortedEnvs, activeEnv);
+            const deletionRequested = onEnvDelete(sortedEnvs, activeEnv);
+            if (!deletionRequested) {
+              showToast(
+                'Unable to delete environments because the server connection is unavailable.',
+                'error'
+              );
+              return;
+            }
             if (
               deletedEnvs.includes(tagEnv) &&
               !deletedEnvs.includes(activeEnv)

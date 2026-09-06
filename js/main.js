@@ -550,6 +550,13 @@ const App = () => {
     const nextEnvIDs = remainingEnvIDs.length > 0 ? remainingEnvIDs : ['main'];
     const selectionChanged = remainingEnvIDs.length !== selection.envIDs.length;
 
+    const deleteMessagesSent = envsToDelete.every((env) =>
+      sendEnvDelete(env, env === previousEnv ? nextEnvIDs[0] : previousEnv)
+    );
+    if (!deleteMessagesSent) {
+      return false;
+    }
+
     if (selectionChanged) {
       setSelection((prev) => ({
         ...prev,
@@ -585,12 +592,10 @@ const App = () => {
       setFocusedPaneID(null);
     }
 
-    envsToDelete.forEach((env) => {
-      sendEnvDelete(env, env === previousEnv ? nextEnvIDs[0] : previousEnv);
-    });
     if (selectionChanged) {
       sendEnvQuery(nextEnvIDs, showAllEnvWindows);
     }
+    return true;
   };
 
   const onTagsSave = (env, tags) => {
